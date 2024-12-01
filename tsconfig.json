@@ -19,6 +19,21 @@
       }
     ],
     "paths": {
+      // Components Alice
+      "@components/*": ["./src/components/*"],
+      
+      // Assets Alice 
+      "@images/*": ["./src/assets/images/*"],
+      "@fonts/*": ["./src/assets/fonts/*"],
+      
+
+      // Style Alice
+      "@styles/*": ["./src/styles/*"],
+
+      // Style Alice
+      "@errors/*": ["./src/errors/*"],
+
+      // General Alice
       "@/*": ["./src/*"]
     }
   },
