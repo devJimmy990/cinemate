@@ -13,11 +13,10 @@ interface MoviesClientProps {
 }
 
 const MoviesClient: FC<MoviesClientProps> = ({ initialMovies }) => {
-    const { getRequest } = useAxios();
+    const { getRequest, loading } = useAxios();
     const [page, setPage] = useState(2);
     const [error, setError] = useState('');
     const [querySearch, setQuerySearch] = useState('');
-    const [loadingMore, setLoadingMore] = useState(false);
     const lastViewRef = useRef<HTMLDivElement | null>(null);
     const [movies, setMovies] = useState<MovieType[]>(initialMovies);
     const [filterTarget, setFilteredTarget] = useState<FilterTargetType>('');
@@ -25,9 +24,6 @@ const MoviesClient: FC<MoviesClientProps> = ({ initialMovies }) => {
 
     // Fetch additional movies on scroll
     const loadMoreMovies = useCallback(async () => {
-        if (loadingMore) return;
-        setLoadingMore(true);
-
         try {
             const res = await getRequest({ page });
             setMovies((prevMovies) => [...prevMovies, ...res]);
@@ -38,10 +34,8 @@ const MoviesClient: FC<MoviesClientProps> = ({ initialMovies }) => {
                     ? error.message
                     : 'An unexpected error occurred while loading more movies.'
             );
-        } finally {
-            setLoadingMore(false);
         }
-    }, [getRequest, page, loadingMore]);
+    }, [getRequest, page]);
 
     // Intersection Observer for infinite scroll
     useEffect(() => {
@@ -49,7 +43,7 @@ const MoviesClient: FC<MoviesClientProps> = ({ initialMovies }) => {
 
         const observer = new IntersectionObserver(
             (entries) => {
-                if (entries[0].isIntersecting && !loadingMore) {
+                if (entries[0].isIntersecting && !filterTarget && !querySearch) {
                     loadMoreMovies();
                 }
             },
@@ -62,7 +56,7 @@ const MoviesClient: FC<MoviesClientProps> = ({ initialMovies }) => {
         return () => {
             if (currentLastViewRef) observer.unobserve(currentLastViewRef);
         };
-    }, [loadMoreMovies, loadingMore]);
+    }, [loadMoreMovies, filterTarget, querySearch]);
 
     // Filter and search logic
     const filteredMovies = useMemo(() => {
@@ -99,18 +93,18 @@ const MoviesClient: FC<MoviesClientProps> = ({ initialMovies }) => {
             />
             {error && <p className="text-red-500">{error}</p>}
             <div className="movies-container">
-                {filteredMovies.length > 0 ? (
+                {filteredMovies.length > 0 && (
                     filteredMovies.map((movie) => (
                         <MovieCard key={movie.id} {...movie} />
                     ))
-                ) : (
-                    <p className="text-gray-500 text-center">No movies found.</p>
                 )}
-                <div ref={lastViewRef} />
-                {loadingMore &&
-                    Array.from({ length: 6 }).map((_, index) => (
-                        <SkeletonMovieCard key={`skeleton-${index}`} />
+
+                {loading &&
+                    Array.from({ length: 10 }).map((_, index) => (
+                        <SkeletonMovieCard key={index} />
                     ))}
+                <div ref={lastViewRef} />
+
             </div>
         </div>
     );
